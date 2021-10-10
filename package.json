@@ -1,0 +1,39 @@
+{
+    "name": "automation-practice",
+    "version": "1.0.0",
+    "description": "Projeto de automação num site de estudos para portfólio pessoal.",
+    "main": "index.js",
+    "scripts": {
+      "lint": "npx standard",
+      "lint:fix": "npx standard --fix",
+      "test": "cypress run --reporter nyan",
+      "cy:open": "cypress open"
+    },
+    "standard": {
+      "globals": [
+        "beforeEach",
+        "context",
+        "cy",
+        "Cypress",
+        "describe",
+        "it"
+      ]
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/driuzzo/automation-practice.git"
+    },
+    "keywords": [
+      "cypress",
+      "cypress.io",
+      "testing"
+    ],
+    "author": "Adriano Driuzzo",
+    "license": "MIT",
+    "homepage": "https://github.com/driuzzo/automation-practice#readme",
+    "devDependencies": {
+      "cypress": "^6.6.0",
+      "faker": "^5.4.0"
+    }
+  }
+  
