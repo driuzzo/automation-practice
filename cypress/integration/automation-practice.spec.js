@@ -269,7 +269,7 @@ describe('ecommerce app testing', () => {
 
         })
 
-        it.only('logout', () => {
+        it('logout', () => {
 
             cy.accessMyAccount(users.user[0].first_name, users.user[0].last_name, welcomeMessage)
 
