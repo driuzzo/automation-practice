@@ -111,7 +111,7 @@ describe('ecommerce app testing', () => {
         })
     })
 
-    context.only('user login', () => {
+    context('user login', () => {
         const users = require('../fixtures/users')
         beforeEach(() => {            
             cy.visit('/')
@@ -267,6 +267,23 @@ describe('ecommerce app testing', () => {
             
             cy.backToMyAccount()
 
+        })
+
+        it.only('logout', () => {
+
+            cy.accessMyAccount(users.user[0].first_name, users.user[0].last_name, welcomeMessage)
+
+            cy.get('.logout')
+                .should('contain.text', 'Sign out')
+                .click()
+
+            cy.url().should('include', 'controller=authentication&back=my-account')
+
+            cy.get('.navigation_page')
+                .should('have.text', '	Authentication')
+
+            cy.get('.login')
+                .should('contain.text', 'Sign in')            
         })
     })
 })
