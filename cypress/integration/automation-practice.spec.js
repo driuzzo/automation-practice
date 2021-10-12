@@ -2,6 +2,9 @@
 
 const faker = require('faker')
 
+const existingUser = 'Robert Deniro'
+const welcomeMessage = 'Welcome to your account. Here you can manage all of your personal information and orders.'
+
 const user = {                
     firstName: `${faker.name.firstName(0)}`,
     lastName: `${faker.name.lastName()}`,
@@ -32,13 +35,8 @@ describe('ecommerce app testing', () => {
         })
         
         it('creates a new user', () => {
-            
-            cy.get('title')
-                .should('have.text', 'My Store')
 
-            cy.get('.login')
-                .should('contain.text', 'Sign in')
-                .click()
+            cy.clickOnSignIn()
 
             cy.get('#email_create')
                 .should('be.visible')
@@ -51,7 +49,7 @@ describe('ecommerce app testing', () => {
                 .and('contain.text', 'Create an account')
                 .click()
             
-            cy.url().should('eq', 'http://automationpractice.com/index.php?controller=authentication&back=my-account#account-creation')
+            cy.url().should('include', 'controller=authentication&back=my-account#account-creation')
 
             cy.get('.navigation_page')
                 .should('have.text', '	Authentication')
@@ -108,7 +106,167 @@ describe('ecommerce app testing', () => {
                 .should('be.visible')
                 .click()
 
-            cy.contains('Welcome to your account. Here you can manage all of your personal information and orders.')
+            cy.get('.info-account')
+                .should('have.text', welcomeMessage)
+        })
+    })
+
+    context.only('user login', () => {
+        const users = require('../fixtures/users')
+        beforeEach(() => {            
+            cy.visit('/')
+        })
+
+        it('does a valid login', () => {
+            cy.pageTitleAssertion()
+            cy.clickOnSignIn()
+            cy.login(users.user[0].email, users.user[0].password)
+            
+            cy.get('.info-account')
+                .should('have.text', welcomeMessage)
+        })
+
+        it('login with invalid password', () => {
+            cy.pageTitleAssertion()
+            cy.clickOnSignIn()
+            cy.login(users.user[0].email, '12345')
+
+            cy.contains('Authentication failed.')
+        })
+
+        it('login with invalid email', () => {
+            cy.pageTitleAssertion()
+            cy.clickOnSignIn()
+            cy.login('noves@b.com', users.user[0].password)
+
+            cy.contains('Authentication failed.')
+        })
+
+        it('login with empty email', () => {
+            cy.pageTitleAssertion()
+            cy.clickOnSignIn()
+            cy.emptyEmailLogin(users.user[0].password)
+
+            cy.contains('An email address required.')
+        })
+
+        it('login with empty password', () => {
+            cy.pageTitleAssertion()
+            cy.clickOnSignIn()
+            cy.emptyPasswordLogin(users.user[0].email)
+
+            cy.contains('Password is required.')
+        })
+
+    })
+
+    context('existing user', () => {
+        const users = require('../fixtures/users')
+        beforeEach(() => {
+            cy.backgroundLogin()
+            cy.visit('/')
+        })
+        
+        it('checks my personal information', () => {
+            
+            cy.accessMyAccount(users.user[0].first_name, users.user[0].last_name, welcomeMessage)
+
+            cy.get('a[title="Information"]')
+                .should('have.text', 'My personal information')
+                .click()
+
+            cy.get('.page-subheading')
+                .should('contain.text', 'Your personal information' )
+
+            cy.get('#id_gender1')
+                .should('be.checked')              
+            
+            cy.get('#firstname')
+                .should('have.value', users.user[0].first_name)
+
+            cy.get('#lastname')
+                .should('have.value', users.user[0].last_name)
+
+            cy.get('#email')
+                .should('have.value', users.user[0].email)
+
+            cy.get('#days')
+                .should('have.value', users.user[0].birth_day)
+
+            cy.get('#months')
+                .should('have.value', '4')
+
+            cy.get('#months > option[value="4"]').should('contain.text', users.user[0].birth_month)
+
+            cy.get('#years')
+                .should('have.value', users.user[0].birth_year)
+
+            cy.get('#old_passwd')
+                .should('be.empty')
+
+            cy.get('#passwd')
+                .should('be.empty')
+
+            cy.get('#confirmation')
+                .should('be.empty')
+            
+            cy.backToMyAccount()
+
+        })
+
+        it('checks my addresses', () => {
+            cy.accessMyAccount(users.user[0].first_name, users.user[0].last_name, welcomeMessage)
+
+            cy.get('a[title="Addresses"]')
+                .should('have.text', 'My addresses')
+                .click()
+
+            cy.get('.page-heading')
+                .should('have.text', 'My addresses')
+
+            cy.get('.address_name')
+                .first()
+                .should('contain.text', users.user[0].first_name)
+
+            cy.get('.address_name')
+                .next()
+                .should('contain.text', users.user[0].last_name)
+                
+            cy.get('.address_address1')
+                .first()
+                .should('contain.text', users.user[0].address)
+
+            cy.get('ul[class="last_item item box"]')
+                .find('li')
+                .eq(4)
+                .within(() => {
+                    cy.get('span')
+                        .eq(0)
+                        .should('contain.text', users.user[0].city)
+                  })
+                .within(() => {
+                    cy.get('span')
+                        .eq(1)
+                        .should('contain.text', users.user[0].state)
+                  })
+
+                .within(() => {
+                    cy.get('span')
+                        .eq(2)
+                        .should('contain.text', users.user[0].zip_code)
+                  })
+
+            cy.get('ul[class="last_item item box"]')
+                .find('li')
+                .eq(5)
+                .should('contain.text', users.user[0].country)
+
+            cy.get('.address_phone_mobile')
+                .first()
+                .should('contain.text', users.user[0].mobile_phone)
+            
+            cy.backToMyAccount()
+
         })
     })
 })
