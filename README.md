@@ -2,14 +2,23 @@
 
 Projeto de automação num site de estudos para portfólio pessoal.
 
-Clone o projeto com:
+### Clone o projeto
+
+```bash
 git clone https://github.com/driuzzo/automation-practice.git
+```
 
-Instale as dependências com:
+### Instale as dependências
+```bash
 npm install
+```
 
-Execute o cypress com:
+### Execute o cypress
+```bash 
 npx cypress open
+```
 
-Clique no script de teste:
+### Execute o script de teste
+```bash
 automation-practice.spec.js
+```
