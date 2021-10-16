@@ -2,7 +2,12 @@
 
 const faker = require('faker')
 
-const existingUser = 'Robert Deniro'
+const blouseProduct = 'Blouse'
+
+const printedSearch = 'printed'
+
+const invalidSearch = 'zero'
+
 const welcomeMessage = 'Welcome to your account. Here you can manage all of your personal information and orders.'
 
 const user = {                
@@ -126,18 +131,18 @@ describe('ecommerce app testing', () => {
                 .should('have.text', welcomeMessage)
         })
 
-        it('login with invalid password', () => {
-            cy.pageTitleAssertion()
-            cy.clickOnSignIn()
-            cy.login(users.user[0].email, '12345')
-
-            cy.contains('Authentication failed.')
-        })
-
         it('login with invalid email', () => {
             cy.pageTitleAssertion()
             cy.clickOnSignIn()
             cy.login('noves@b.com', users.user[0].password)
+
+            cy.contains('Authentication failed.')
+        })
+
+        it('login with invalid password', () => {
+            cy.pageTitleAssertion()
+            cy.clickOnSignIn()
+            cy.login(users.user[0].email, '12345')
 
             cy.contains('Authentication failed.')
         })
@@ -284,6 +289,104 @@ describe('ecommerce app testing', () => {
 
             cy.get('.login')
                 .should('contain.text', 'Sign in')            
+        })
+    })
+
+    context('orders', () => {
+        const users = require('../fixtures/users')
+        beforeEach(() => {
+            cy.backgroundLogin()
+            cy.visit('/')
+        })
+
+        it('does a quick view from an item and access each thumbnail', () => {
+            cy.getProductQuickView(blouseProduct)
+
+            cy.get('iframe')
+                .should('be.visible')
+                .then(($iframe) => {
+            const $body = $iframe
+                .contents()
+                .find('body')
+
+            cy.wrap($body)
+                .find('[itemprop="name"]')
+                .should('have.text', `${blouseProduct}`)
+                
+            cy.wrap($body)
+                .find('#quantity_wanted')
+                .should('have.value', '1')
+
+            cy.wrap($body)
+                .find('#bigpic')
+                .as('bigpic')
+
+            cy.wrap($body)
+                .find('#thumbs_list_frame > li').each((item) => {
+                    cy.wrap(item)
+                        .trigger('mouseover')
+                        .invoke('attr', 'id')
+                        .then($id => {
+                            const idvalue = $id.charAt($id.length-1)
+
+                        cy.get('@bigpic')
+                            .should('have.attr', 'src', `http://automationpractice.com/img/p/${idvalue}/${idvalue}-large_default.jpg`)
+                        })
+                })
+
+            cy.get('a[title="Close"]')
+                .click()
+            
+            })
+        })
+
+        it('searches for a product with 1 result', () => {
+            cy.intercept(
+                'GET',
+                `**search&q=${blouseProduct}**`
+            ).as('getSearch')
+            
+            cy.get('#search_query_top')
+                .type(blouseProduct)
+                .type('{enter}')
+
+            cy.get('ul[class="product_list grid row"]>li')
+                .should('have.length', 1)
+
+            cy.get('.heading-counter')
+                .should('contain.text', '1 result has been found.')
+
+            })
+
+        it('searches for a product with more than one result', () => {
+            cy.intercept(
+                'GET',
+                `**search&q=${printedSearch}**`
+            ).as('getSearch')
+            
+            cy.get('#search_query_top')
+                .type(printedSearch)
+                .type('{enter}')
+
+            cy.wait('@getSearch')
+    
+            cy.get('ul[class="product_list grid row"]>li')
+                .then($list => {
+                    const listSize = $list.length
+
+                cy.get('.heading-counter')
+                    .should('contain.text', `${listSize} results have been found.`)
+                })    
+            })
+        it('searches for a product with no results', () => {
+            
+            cy.get('#search_query_top')
+                .type(invalidSearch)
+                .type('{enter}')
+
+            cy.contains('.alert-warning', `No results were found for your search "${invalidSearch}"`)
+
+            cy.contains('.heading-counter', '0 results have been found.')
         })
     })
 })

@@ -88,4 +88,13 @@ Cypress.Commands.add('emptyPasswordLogin', (email) =>{
         .click()
 })
 
+Cypress.Commands.add('getProductQuickView', (nomeProduto) => {
+    cy.get(`.product-name:contains(${nomeProduto})`)
+    .first()
+    .parents('.right-block')
+    .siblings('.left-block')
+    .find('.quick-view')
+    .invoke('show')
+    .click()
+})
 
