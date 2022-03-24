@@ -2,6 +2,5 @@
     "baseUrl": "http://automationpractice.com",
     "viewportHeight": 720,
     "viewportWidth": 1080,
-    "chromeWebSecurity": false,
-    "pageLoadTimeout": 10000
+    "chromeWebSecurity": false
 }

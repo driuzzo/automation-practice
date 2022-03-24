@@ -6,6 +6,8 @@ const blouseProduct = 'Blouse'
 
 const printedSearch = 'printed'
 
+const printedDress = 'Printed Dress'
+
 const invalidSearch = 'zero'
 
 const welcomeMessage = 'Welcome to your account. Here you can manage all of your personal information and orders.'
@@ -119,12 +121,11 @@ describe('ecommerce app testing', () => {
     context('user login', () => {
         const users = require('../fixtures/users')
         beforeEach(() => {            
-            cy.visit('/')
+            cy.visit('http://automationpractice.com/index.php?controller=authentication&back=my-account')
         })
 
         it('does a valid login', () => {
-            cy.pageTitleAssertion()
-            cy.clickOnSignIn()
+
             cy.login(users.user[0].email, users.user[0].password)
             
             cy.get('.info-account')
@@ -132,32 +133,28 @@ describe('ecommerce app testing', () => {
         })
 
         it('login with invalid email', () => {
-            cy.pageTitleAssertion()
-            cy.clickOnSignIn()
+
             cy.login('noves@b.com', users.user[0].password)
 
             cy.contains('Authentication failed.')
         })
 
         it('login with invalid password', () => {
-            cy.pageTitleAssertion()
-            cy.clickOnSignIn()
+
             cy.login(users.user[0].email, '12345')
 
             cy.contains('Authentication failed.')
         })
 
         it('login with empty email', () => {
-            cy.pageTitleAssertion()
-            cy.clickOnSignIn()
+
             cy.emptyEmailLogin(users.user[0].password)
 
             cy.contains('An email address required.')
         })
 
         it('login with empty password', () => {
-            cy.pageTitleAssertion()
-            cy.clickOnSignIn()
+
             cy.emptyPasswordLogin(users.user[0].email)
 
             cy.contains('Password is required.')
@@ -302,7 +299,7 @@ describe('ecommerce app testing', () => {
         it('does a quick view from an item and access each thumbnail', () => {
             cy.getProductQuickView(blouseProduct)
 
-            cy.get('iframe')
+            cy.get('iframe', {timeout: 15000})
                 .should('be.visible')
                 .then(($iframe) => {
             const $body = $iframe
@@ -378,6 +375,7 @@ describe('ecommerce app testing', () => {
                     .should('contain.text', `${listSize} results have been found.`)
                 })    
             })
+            
         it('searches for a product with no results', () => {
             
             cy.get('#search_query_top')
@@ -387,6 +385,71 @@ describe('ecommerce app testing', () => {
             cy.contains('.alert-warning', `No results were found for your search "${invalidSearch}"`)
 
             cy.contains('.heading-counter', '0 results have been found.')
+        })
+
+        it('checks cart is empty', () => {
+            cy.get('.ajax_cart_no_product')
+                .should('be.visible')
+                .and('have.text', '(empty)')
+        })
+
+        it.only('searches for a product and order it', () => {
+            cy.intercept(
+                'GET',
+                `**search&q=${printedSearch}**`
+            ).as('getSearch')
+            
+            cy.get('#search_query_top')
+                .type(printedSearch)
+                .type('{enter}')
+
+            // cy.wait('@getSearch')
+    
+            cy.get('ul[class="product_list grid row"]>li')
+                .find(`.product-name:contains(${printedDress})`)
+                .eq(0).as('printedDressObject')
+
+            cy.get('@printedDressObject')
+                .parents('.right-block')
+                .find('.availability .available-now')
+                .should('contain', 'In stock')
+
+            cy.get('@printedDressObject')
+                .parents('.right-block')
+                .find('span[class="price product-price"]')
+                .invoke('text')
+                .then((price) => {
+
+                    const printedDressPrice = price.trim()
+                    cy.get('@printedDressObject')
+                        .parents('.right-block')
+                        .find('a[title="View"]')
+                        .click()
+
+                    cy.get('#our_price_display')
+                        .should('have.text', `${printedDressPrice}`)
+                })
+
+            cy.get('h1')
+                .should('have.text', `${printedDress}`)
+            
+            cy.get('#quantity_wanted')
+                .should('have.value', '1')
+
+            cy.get('#group_1').select('M')
+
+            cy.get('button[name="Submit"]')
+                .should('be.visible')
+                .and('contain.text', 'Add to cart')
+                .click()
+
+            cy.get('#layer_cart', {timeout: 20000})
+                .should('be.visible')
+
+            cy.get('a[title="Proceed to checkout"]', {timeout: 20000})
+                .should('be.visible')
+                .and('contain.text', 'Proceed to checkout')
+                .click()
         })
     })
 })
